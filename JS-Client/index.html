@@ -1,0 +1,140 @@
+<!DOCTYPE html>
+<html lang='en'>
+<head>
+	<meta charset='UTF-8'>
+	<title>Websocket</title>
+</head>
+<script src='mqttws31.js'></script>
+<body>
+	<div id='wrapper'>
+		<form id='sendMessageForm'>
+			<input type='text' id='inputTopic'/>
+			<input type='text' id='inputMessage'/>
+			<input type='submit' id='publishData' value='Send'/>
+		</form>
+		<table id='recievedMessages'>
+			<thead>
+				<tr>
+					<td style='border-right: 1px solid black'>Topic</td>
+					<td>Message</td>
+				</tr>
+			</thead>
+			<tbody></tbody>
+		</table>
+	</div>
+	<style>
+
+		body{
+			font-family: Ubuntu, Arial;
+		}
+
+		#wrapper{
+			/*background: #c2c2c2;*/
+			display: flex;
+			justify-content: center;
+			padding: 10px;
+			
+		}
+
+		#recievedMessages{
+			background: white;
+			width: 400px;
+			text-align: center;
+			box-shadow: 2px 2px 5px black;
+			margin:5px;
+		}
+
+		#sendMessageForm{
+			display: flex;
+			flex-direction: column;
+			justify-content: space-between;
+			background: #0078a1;
+			padding: 2px 5px 5px 5px;
+			height: 100px;
+			box-shadow: 2px 2px 5px black;
+			margin: 5px;
+
+		}
+
+		#sendMessageForm #inputTopic, #inputMessage{
+			font-size: 17px;
+			padding: 5px;
+			margin: 3px 0 3px 0;
+			border-radius: 3px;
+			border: none;
+		}
+
+		#sendMessageForm #publishData{
+			border-radius: 3px;
+			border: none;
+			background: #96aaff;
+			font-size: 17px;
+			width: 90%;
+			margin : 0 5% 0 5%;
+		}
+
+	</style>
+	
+	<script>
+
+		let host = '192.168.43.244';
+		let port = 9997;
+		let clientID = 'ID';
+
+		let client = new Paho.MQTT.Client(host, port, clientID);
+
+		// установка обработчиков обратного вызова
+		client.onConnectionLost = onConnectionLost;
+		client.onMessageArrived = onMessageArrived;
+
+		// подключение клиента
+		client.connect({
+			onSuccess: onConnect,
+			userName : 'pi',
+			password : '123'
+		});
+
+		// вызывается при подключении клиента
+		function onConnect() {
+			console.log('connected');
+			subscribe();
+		}
+
+		function subscribe(){
+			client.subscribe('#');
+		}
+
+		function publish(event){
+			event.preventDefault();
+			let message = new Paho.MQTT.Message(inputMessage.value);
+			message.destinationName = inputTopic.value;
+			client.send(message);
+			inputMessage.value = '';
+		}
+
+		publishData.onclick = publish;
+
+		// вызывается, когда клиент теряет связь
+		function onConnectionLost(responseObject) {
+			if (responseObject.errorCode !== 0) {
+				console.log('onConnectionLost:' + responseObject.errorMessage);
+			}
+		}
+		// вызывается при поступлении сообщения
+		function onMessageArrived(message) {
+			console.log('message recieved : ' + message.payloadString);
+			
+			let res = document.querySelector('tbody');
+
+			let stripe = (res.children.length % 2) ? '' : '#96aaff';
+
+			if (message.destinationName.indexOf('$SYS')){
+				res.innerHTML += `<tr style='background:${stripe}'><td style='border-right: 1px solid black;'>${message.destinationName}</td><td>${message.payloadString}</td></tr>`;
+			}
+	
+		}
+
+	</script>
+
+</body>
+</html>
