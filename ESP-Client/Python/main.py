@@ -6,10 +6,10 @@ data = 'Some data from ESP'
 ssid = 'ssid'
 WiFiPassword = 'password'
 
-broker = 'postman.cloudmqtt.com'
-port = 18697
-user = 'vfwrxgsq'
-password = 'tYTP8C1e_IeK'
+broker = '192.168.43.244'
+port = 1883
+user = 'pi'
+password = '123'
 clientId = 'ESP_ID'
 
 # подключаемся в качестве станции
